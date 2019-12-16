@@ -1,0 +1,18 @@
+#canvas-container {
+	width: 100%;
+	text-align: center;
+}
+
+#canvas {
+	display: inline;
+	border-style: solid;
+}
+
+h1 {
+	text-align: center;
+	letter-spacing: 3px;
+}
+
+#score {
+	letter-spacing: 3px;
+}
