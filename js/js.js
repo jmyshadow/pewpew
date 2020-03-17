@@ -73,136 +73,175 @@ window.onload = function () {
 
 	// CONSTRUCTOR FUNCTIONS
 	//
-	function Ship(width, height) {
-		this.width = width;
-		this.height = height;
-		this.innerHeight = height - 20;
-		this.xPos = 200;
-		this.yPos = 400;
-		this.xVel = 0;
-		this.yVel = 0;
-	}
+	class Ship {
+		constructor(width, height) {
+			this.width = width;
+			this.height = height;
+			this.innerHeight = height - 20;
+			this.xPos = 200;
+			this.yPos = 400;
+			this.xVel = 0;
+			this.yVel = 0;
+		}
+		draw() {
+			ctx.beginPath();
+			ctx.moveTo(this.xPos, this.yPos);
+			ctx.lineTo(this.xPos - this.width / 2, this.yPos + this.height);
+			ctx.lineTo(this.xPos, this.yPos + this.innerHeight);
+			ctx.lineTo(this.xPos + this.width / 2, this.yPos + this.height);
+			ctx.lineTo(this.xPos, this.yPos);
+			ctx.fill();
+		}
+		move() {
+			if (this.xPos <= this.width / 2 + 5 || this.xPos >= 400 - this.width / 2 - 5) {
+				this.xVel = -this.xVel;
+			}
+			this.xPos += this.xVel;
 
-	function Laser(x, y ) {
-		this.length = 10;
-		this.xPos = x;
-		this.yPos = y;
-		this.isVis = true;
-	}
+			if (this.xPos > 395) {
+				this.xPos = 395;
+			}
 
-	function Ball(x, y, r) {
-		this.x = x;
-		this.y = y;
-		this.r = r;
-		this.vel = .5 + Math.random() * 2.5;
-		this.vel = parseFloat(this.vel.toFixed(2));
-		this.isVis = true;
-	}
+			if (this.yPos <= 5 || this.yPos >= 600 - 5 - this.height) {
+				this.yVel = -this.yVel;
+			}
+			this.yPos += this.yVel;
+			this.decel();
+			this.getMovement();
+			this.draw();
+		}
 
-	function Pellet(x,y,dx,dy){
-		this.x = x;
-		this.y = y;
-		this.dx = dx;
-		this.dy = dy;
-		this.r = 5;
-		this.ticks = 0;
-	}
-
-	// DRAW FUNCTIONS
-	//
-	Ship.prototype.draw = function () {
-		ctx.beginPath();
-		ctx.moveTo(this.xPos, this.yPos);
-		ctx.lineTo(this.xPos - this.width / 2, this.yPos + this.height);
-		ctx.lineTo(this.xPos, this.yPos + this.innerHeight);
-		ctx.lineTo(this.xPos + this.width / 2, this.yPos + this.height);
-		ctx.lineTo(this.xPos, this.yPos);
-		ctx.fill();
-	}
-
-	Laser.prototype.draw = function () {
-		ctx.beginPath();
-		ctx.moveTo(this.xPos, this.yPos);
-		ctx.lineTo(this.xPos, this.yPos + this.length);
-		ctx.stroke();
-	}
+		decel() {
+			// slow down vertical speed 
+			if (this.yVel < 0) {
+				this.yVel += .03;
+			} else if (this.yVel > 0) {
+				this.yVel -= .03;
+			}
 	
-	Ball.prototype.draw = function () {
-		ctx.lineWidth = 5;
-		ctx.beginPath();
-		ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-		ctx.fill();
-		ctx.strokeStyle = "black";
-		ctx.stroke();
-		ctx.lineWidth = 3;
-	}
-
-	Pellet.prototype.draw = function(){
-		ctx.beginPath();
-		ctx.fillStyle = "black";
-		if(this.ticks%10 == 0){
-			this.r -= .4;
-		}
-		ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-		ctx.fill();
-		ctx.strokeStyle = "white";
-		ctx.stroke();
-	}
-
-	//MOVE FUNCTIONS
-	//
-	Ship.prototype.move = function () {
-		if (this.xPos <= this.width / 2 + 5 || this.xPos >= 400 - this.width / 2 - 5) {
-			this.xVel = -this.xVel;
-		}
-		this.xPos += this.xVel;
-
-		if(this.xPos > 395){
-			this.xPos = 395;
+			//slowdown horizontal speed
+			if (this.xVel < 0) {
+				this.xVel += .05;
+			} else if (this.xVel > 0) {
+				this.xVel -= .05;
+			}
 		}
 
-		if (this.yPos <= 5 || this.yPos >= 600 - 5 - this.height) {
-			this.yVel = -this.yVel;
+		getMovement() {
+			if (isKeyUp) {
+				if (this.yVel >= -3) {
+					this.yVel -= .25; //capping the speed of the ship
+					this.yVel = parseFloat(this.yVel.toFixed(2));
+				}
+			}
+			if (isKeyDown) {
+				if (this.yVel <= 3) {
+					this.yVel += .25; // capping speed of the ship
+					this.yVel = parseFloat(this.yVel.toFixed(2));
+				}
+			}
+			if (isKeyLeft) {
+				if (this.xVel >= -4) {
+					this.xVel -= .5; // capping speed of the ship
+					this.xVel = parseFloat(this.xVel.toFixed(2));
+				}
+			}
+			if (isKeyRight) {
+				if (this.xVel <= 4) {
+					this.xVel += .5; // capping speed of the ship
+					this.xVel = parseFloat(this.xVel.toFixed(2));
+				}
+			}
 		}
-		this.yPos += this.yVel;
 	}
 
-	Laser.prototype.move = function () {
-		if (this.length < 50) {
-			this.length += 3;
+	class Laser {
+		constructor(x, y) {
+			this.length = 10;
+			this.xPos = x;
+			this.yPos = y;
+			this.isVis = true;
 		}
-		this.yPos -= 10;
+		draw() {
+			ctx.beginPath();
+			ctx.moveTo(this.xPos, this.yPos);
+			ctx.lineTo(this.xPos, this.yPos + this.length);
+			ctx.stroke();
+		}
+		move() {
+			if (this.length < 50) {
+				this.length += 3;
+			}
+			this.yPos -= 10;
+		}
 	}
 
-	Ball.prototype.move = function () {
-		this.y += this.vel;
+	class Ball {
+		constructor(x, y, r) {
+			this.x = x;
+			this.y = y;
+			this.r = r;
+			this.vel = .5 + Math.random() * 2.5;
+			this.vel = parseFloat(this.vel.toFixed(2));
+			this.isVis = true;
+		}
+		draw() {
+			ctx.lineWidth = 5;
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.strokeStyle = "black";
+			ctx.stroke();
+			ctx.lineWidth = 3;
+		}
+		move() {
+			this.y += this.vel;
+		}
 	}
 
-	Pellet.prototype.move = function(){
-		this.y += this.dy;
-		this.x += this.dx;
-		this.ticks++;
+	class Pellet {
+		constructor(x, y, dx, dy) {
+			this.x = x;
+			this.y = y;
+			this.dx = dx;
+			this.dy = dy;
+			this.r = 5;
+			this.ticks = 0;
+		}
+		draw() {
+			ctx.beginPath();
+			ctx.fillStyle = "black";
+			if (this.ticks % 10 == 0) {
+				this.r -= .4;
+			}
+			ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.strokeStyle = "white";
+			ctx.stroke();
+		}
+		move() {
+			this.y += this.dy;
+			this.x += this.dx;
+			this.ticks++;
+		}
 	}
 
 	// ANIMATION
 	//
-	setInterval(function () {
+	function playGame() {
 		if (game) {
 			scoreOut.innerHTML = "Score: " + score();
 			animate();
-			getShipMovement();
-			shipDecel(); //calling a function to slow down the ship if key is not pressed
 			checkCollisions();
 		}
-	}, 10);
-
+		requestAnimationFrame(playGame);
+	}
+	
 	function animate() {
 		ctx.fillStyle = "black";
 		ctx.fillRect(0, 0, 400, 600);
 		ctx.fillStyle = "white";
 		ship.move();
-		ship.draw();
-
 		//draw lasers
 		ctx.strokeStyle = "white";
 		if (lasers.length > 0) {
@@ -243,12 +282,12 @@ window.onload = function () {
 		}
 
 		//draw pellets (explosion)
-		pellets.forEach(function(pellet,index,pellets){
-			if(pellet.ticks > 100){
+		pellets.forEach(function (pellet, index, pellets) {
+			if (pellet.ticks > 100) {
 				pellets.splice(index, 1);
 			}
 		});
-		pellets.forEach(function(pellet){
+		pellets.forEach(function (pellet) {
 			pellet.move();
 			pellet.draw();
 		});
@@ -305,6 +344,7 @@ window.onload = function () {
 	stylizeHeader();
 	var ship = new Ship(30, 50);
 	ship.draw();
+	requestAnimationFrame(playGame);
 
 	// function to generate balls
 	//
@@ -324,57 +364,12 @@ window.onload = function () {
 		}
 	}, 100 + Math.random() * 500);
 
-	//UTILITY FUNCTIONS
-	// function to change velocity of ship
-	function getShipMovement() {
-		if (isKeyUp) {
-			if (ship.yVel >= -3) {
-				ship.yVel -= .25; //capping the speed of the ship
-				ship.yVel = parseFloat(ship.yVel.toFixed(2));
-			}
-		}
-		if (isKeyDown) {
-			if (ship.yVel <= 3) {
-				ship.yVel += .25; // capping speed of the ship
-				ship.yVel = parseFloat(ship.yVel.toFixed(2));
-			}
-		}
-		if (isKeyLeft) {
-			if (ship.xVel >= -4) {
-				ship.xVel -= .5; // capping speed of the ship
-				ship.xVel = parseFloat(ship.xVel.toFixed(2));
-			}
-		}
-		if (isKeyRight) {
-			if (ship.xVel <= 4) {
-				ship.xVel += .5; // capping speed of the ship
-				ship.xVel = parseFloat(ship.xVel.toFixed(2));
-			}
-		}
-	}
 
 	//generates random radius for a Ball Object
 	//returns a value between 20-60
 	function getNewRadius() {
 		radius = Math.random() * 40 + 20;
 		return radius;
-	}
-
-	//function to slow down the ship if button is not pressed
-	function shipDecel() {
-		// slow down vertical speed 
-		if (ship.yVel < 0) {
-			ship.yVel += .03;
-		} else if (ship.yVel > 0) {
-			ship.yVel -= .03;
-		}
-
-		//slowdown horizontal speed
-		if (ship.xVel < 0) {
-			ship.xVel += .05;
-		} else if (ship.xVel > 0) {
-			ship.xVel -= .05;
-		}
 	}
 
 	// Ball Collision checking
@@ -389,7 +384,7 @@ window.onload = function () {
 							balls[i].isVis = false;
 							lasers[j].isVis = false;
 							score(1);
-							makeItExplode(balls[i].x,balls[i].y);
+							makeItExplode(balls[i].x, balls[i].y);
 							for (var i = 0; i < explosions.length; i++) {
 								if (explosions[i].ended || explosions[i].currentTime == 0) {
 									explosions[i].play();
@@ -437,10 +432,10 @@ window.onload = function () {
 		$("#score").fontify();
 	}
 
-	function makeItExplode(x,y){
-		for(var i = 0; i < 10; i++){
-			pellet = new Pellet(x,y,(Math.random()*3) *  (Math.round(Math.random()) * 2 - 1),
-			(Math.random()*3)* (Math.round(Math.random()) * 2 - 1));
+	function makeItExplode(x, y) {
+		for (var i = 0; i < 10; i++) {
+			pellet = new Pellet(x, y, (Math.random() * 3) * (Math.round(Math.random()) * 2 - 1),
+				(Math.random() * 3) * (Math.round(Math.random()) * 2 - 1));
 			pellets.push(pellet);
 		}
 	}
